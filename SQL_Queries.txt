@@ -1,0 +1,317 @@
+SQL QUERIES: 
+
+Create table Patientinfo 
+( 
+pat_id integer, 
+pat_name varchar(20) not null, 
+pat_fname varchar(20) not null, 
+dob date not null, 
+p_gender char(1) not null check(p_gender in ('M','F')), 
+p_street_address varchar(30) not null, 
+p_city varchar(15) not null, 
+p_state varchar(15) not null, 
+p_country varchar(15) not null, 
+p_postal_code varchar(8) not null, 
+p_phoneno varchar(10) not null, 
+p_weight integer not null, 
+other_det varchar(30), 
+p_date timestamp not null, 
+primary key(pat_id) 
+); 
+ 
+create index pat_date on Patientinfo(p_date); 
+ 
+ 
+ 
+ 
+
+ 
+Create table Dr_design 
+( 
+designation varchar(10), 
+salary decimal(10,2) not null check(salary>50000), 
+doc_charge integer not null, 
+primary key(designation) 
+); 
+ 
+Create table Doctorinfo 
+( 
+doc_id integer, 
+doc_name varchar(20) not null, 
+doc_fname varchar(20) not null, 
+d_gender char(1) not null check(d_gender in ('M','F')), 
+d_street_address varchar(30) not null, 
+d_city varchar(15) not null, 
+d_state varchar(15) not null, 
+d_country varchar(15) not null, 
+d_postal_code varchar(8) not null, 
+d_phoneno varchar(10) not null, 
+designation varchar(10) not null check(designation in ('Jr','Sr','Surgeon','Assistant','Specialist')), 
+primary key(doc_id), 
+foreign key(designation) references Dr_design(designation) on delete cascade on update cascade 
+); 
+ 
+create index design on Doctorinfo(designation); 
+
+ 
+ 
+Create table Staff_dept_charge 
+( 
+dept_name varchar(10) not null, 
+staff_charge integer not null, 
+primary key(dept_name) 
+); 
+ 
+Create table Staffinfo 
+( 
+staff_id integer, 
+s_Name varchar(20) not null, 
+staff_fname varchar(20) not null, 
+dept_name varchar(10) not null, 
+s_gender char(1) not null check(s_gender in ('M','F')), 
+s_street_address varchar(30) not null , 
+s_city varchar(15) not null, 
+s_state varchar(15) not null, 
+s_country varchar(15) not null, 
+s_postal_code varchar(8) not null, 
+s_phoneno varchar(10) not null, 
+primary key(staff_id), 
+foreign key(dept_name) references Staff_dept_charge(dept_name) on delete cascade on update cascade 
+); 
+ 
+ 
+
+ 
+Create table Doc_Staff 
+( 
+doc_id integer not null, 
+staff_id integer not null, 
+primary key(doc_id,staff_id), 
+foreign key(doc_id) references Doctorinfo(doc_id) on delete cascade, 
+foreign key (staff_id) references Staffinfo(staff_id) on delete cascade 
+); 
+ 
+Create table Labinfo 
+( 
+lab_id integer, 
+l_weight integer not null, 
+lab_date timestamp not null unique, 
+diag_details varchar(50) not null, 
+remark varchar(50), 
+other varchar(100), 
+lab_charge integer not null, 
+primary key(lab_id) 
+); 
+ 
+ 
+ 
+ 
+Create table Assist 
+( 
+lab_id integer not null, 
+pat_id integer not null, 
+doc_id integer not null, 
+lab_date timestamp not null, 
+primary key(lab_id,pat_id,doc_id), 
+foreign key(lab_id) references Labinfo(lab_id) on delete cascade, 
+foreign key(doc_id) references Doctorinfo(doc_id) on delete cascade, 
+foreign key(pat_id) references Patientinfo(pat_id) on delete cascade, 
+foreign key(lab_date) references Labinfo(lab_date) on delete cascade 
+); 
+ 
+ 
+ 
+Create table Roomcharge 
+( 
+room_type varchar(7),  
+room_charge integer not null, 
+primary key(room_type) 
+); 
+ 
+ 
+ 
+ 
+Create table Roominfo 
+( 
+room_no integer, 
+room_type varchar(7) not null check(room_type in ('Single','Duplex','Triplex','Common')), 
+tot_beds integer not null, 
+no_bd_occupd integer not null,  
+status varchar(8) not null check(status in ('vacant','occupied')),  
+floor_no integer not null, 
+primary key(room_no), 
+foreign key(room_type) references Roomcharge(room_type) on delete cascade on update cascade 
+); 
+ 
+create index room_typ on Roominfo(room_type); 
+create index stats on Roominfo(status); 
+ 
+Create table Inpatientinfo 
+( 
+room_no integer not null, 
+pat_id integer not null, 
+date_of_adm timestamp not null, 
+date_of_disch timestamp not null, 
+no_of_days integer not null, 
+primary key(room_no, pat_id, date_of_adm), 
+foreign key(room_no) references Roominfo(room_no) on delete cascade, 
+foreign key(pat_id) references Patientinfo(pat_id) on delete cascade 
+); 
+
+ 
+Create table Outpatientinfo 
+( 
+pat_id integer not null, 
+o_pat_date timestamp not null, 
+primary key(pat_id,o_pat_date), 
+foreign key(pat_id) references Patientinfo(pat_id) on delete cascade on update cascade 
+); 
+ 
+ 
+ 
+ 
+Create table Medicalcharge 
+( 
+bill_id integer,  
+doc_charge integer not null,  
+lab_charge integer not null,  
+staff_charge integer not null,  
+med_charge integer default 0,  
+operation_charge integer default 0,  
+room_charge integer not null,  
+b_datetime timestamp not null, 
+primary key(bill_id) 
+); 
+ 
+create index bill_dt on Medicalcharge(b_datetime); 
+ 
+ 
+ 
+ 
+Create table Bill_Pat 
+( 
+bill_id integer not null,  
+pat_id integer not null, 
+primary key(bill_id,pat_id), 
+foreign key(bill_id) references Medicalcharge(bill_id) on delete cascade, 
+foreign key(pat_id) references Patientinfo(pat_id) on delete cascade 
+); 
+ 
+Create table Schedinfo 
+( 
+app_id integer,  
+pat_id integer not null,  
+doc_id integer not null,  
+app_date timestamp not null,  
+app_datetime timestamp not null, 
+primary key(app_id,pat_id,doc_id), 
+foreign key(pat_id) references Patientinfo(pat_id) on delete cascade, 
+foreign key(doc_id) references Doctorinfo(doc_id) on delete cascade 
+); 
+ 
+
+ 
+Inserting values into the relations: 
+insert into Patientinfo values(10001,'Arun Sharma','Arun','01/22/1991','M','A6 Spruce Street','Jersey City','NJ','US','07307',9876345612,65,'Suffering from cold and cough','06-122012 14:00:00'); 
+insert into Patientinfo values(10002,'Vijay Sinha','Vijay','04/12/1986','M','B9 Prospect Street','Union City','NJ','US','07306',9876275612,70,'High Fever','06-08-2013 15:00:00'); 
+insert into Patientinfo values(10003,'John Cooper','John','06/15/1978','M','C6 Thorne Street','Hoboken','NJ','US','0856',9876782612,78,'Throat pain','02-10-2014 18:00:00'); 
+insert into Patientinfo values(10004,'Michelle Stanley','Michelle','08/09/1998','F','A4 Laven Street','Jersey City','NJ','US','07307',9901345612,60,'Stomach ache','05-12-2015 10:00:00'); 
+insert into Patientinfo values(10005,'Ruby Yul','Ruby','03/25/1996','F','A6 Enble Street','Union City','NJ','US','03307',3467345612,60,'Heart ache','03-08-2016 11:00:00'); 
+insert into Patientinfo values(10006,'Hanny Khub','Honey','06/20/1985','F','202 Enble Street','Union City','NJ','US','03307',3423445612,72,'Head ache','05-10-2016 11:00:00'); 
+insert into Patientinfo values(10007,'Sameul Honey','Sameul','07/20/1988','M','201 Enle Street','Union City','NJ','US','03307',3421235612,63,'Head ache','05-20-2016 11:00:00'); 
+ 
+ 
+ 
+ 
+insert into Doctorinfo values(101,'Stan Murphy','Stan','M','212 Hopkins Street','Hoboken','NJ','US',08234,7623569801,'Jr'); 
+insert into Doctorinfo values(102,'Alice Yum','Alice','F','13 Hopkins Street','Hoboken','NJ','US',08454,7456569801,'Sr'); 
+insert into Doctorinfo values(103,'Steve Jan','Steve','M','2 Ins Street','Union City','NJ','US',02334,7698013471,'Assistant'); 
+insert into Doctorinfo values(104,'Mike Lanny','Mike','M','224 Central Street','Jersey City','NJ','US',08267,7690169801,'Surgeon'); 
+insert into Doctorinfo values(105,'Camy Hun','Camy','F','2 Hopkins Street','Hoboken','NJ','US',08234,7623123801,'Specialist'); 
+ 
+ 
+
+ 
+insert into Dr_design values('Jr',100000,1000); 
+insert into Dr_design values('Sr',200000,2000); 
+insert into Dr_design values('Assistant',300000,3000); 
+insert into Dr_design values('Surgeon',400000,4000); 
+insert into Dr_design values('Specialist',500000,5000); 
+ 
+insert into Doc_staff values(101,202); 
+insert into Doc_staff values(102,201); 
+insert into Doc_staff values(103,204); 
+insert into Doc_staff values(104,203); 
+insert into Doc_staff values(105,205); 
+ 
+insert into Labinfo values(1,70,'06-12-2012 18:00:00','Few Symptoms of Malaria','More tests required',450); 
+insert into Labinfo values(2,75,'06-08-2013 19:00:00','Malaria','No more tests required',450); 
+insert into Labinfo values(3,80,'02-10-2014 20:00:00','Tonsils','More tests required',300); 
+insert into Labinfo values(4,61,'05-12-2015 13:00:00','Symptoms for Cancer','More tests required',650); 
+insert into Labinfo values(5,65,'03-08-2016 14:00:00','Heart blockage','More tests required',650); 
+insert into Labinfo values(6,73,'05-10-2016 13:00:00','Head ache','No more tests required',450); 
+ 
+insert into Assist values(1,10001,102,'06-12-2012 18:00:00'); 
+insert into Assist values(2,10002,101,'06-08-2013 19:00:00'); 
+insert into Assist values(3,10003,102,'02-10-2014 20:00:00'); 
+insert into Assist values(4,10004,105,'05-12-2015 13:00:00'); 
+insert into Assist values(5,10005,104,'03-08-2016 14:00:00'); 
+insert into Assist values(6,10006,101,'05-10-2016 13:00:00'); 
+ 
+ 
+insert into Staffinfo values(201,'Sheela Trui','Sheela','Nurse','F','A2 Labr Street','Hoboken','NJ','US','78342',6527839789); 
+insert into Staffinfo values(202,'Manish Lui','Manish','Wardboy','M','B6 Lincholn Street','Hoboken','NJ','US','78342',4563839789); 
+insert into Staffinfo values(203,'Jenifer Yui','Jenifer','Nurse','F','L1 Central Street','Jersey City','NJ','US','07307',6528912789); 
+insert into Staffinfo values(204,'Vitram Hanny','Vitram','Wardboy','M','B8 Labr Street','Hoboken','NJ','US','78342',6521234789); 
+insert into Staffinfo values(205,'Junn Ham','Junn','Nurse','F','B9 Hopkins Street','Union City','NJ','US','34342',8977839789); 
+insert into Staffinfo values(206,'Judy Hum','Judy','Accountant','F','212 Hopkins Street','Union City','NJ','US','32342',8990459789); 
+ 
+insert into Staff_dept_charge values('Nurse',100); 
+insert into Staff_dept_charge values('Accountant',200); 
+insert into Staff_dept_charge values('Wardboy',80); 
+insert into Staff_dept_charge values('Cleaning',50); 
+ 
+insert into Inpatientinfo values(001,10001,'06-13-2012 10:00:00','07-12-2012 14:00:00',30); 
+insert into Inpatientinfo values(001,10002,'06-09-2013 15:00:00','07-08-2013 14:00:00',30); 
+insert into Inpatientinfo values(003,10003,'02-11-2014 18:00:00','02-13-2014 14:00:00',2); 
+insert into Inpatientinfo values(002,10004,'05-13-2015 10:00:00','05-12-2016 14:00:00',365); 
+insert into Inpatientinfo values(003,10005,'03-09-2016 11:00:00','04-08-2016 18:00:00',30); 
+ 
+insert into Outpatientinfo values(10006,'05-10-2016 15:00:00'); 
+ 
+insert into Roominfo values(001,'Duplex',2,2,'occupied',2); 
+insert into Roominfo values(002,'Single',1,1,'occupied',2); 
+insert into Roominfo values(003,'Duplex',2,2,'occupied',2); 
+
+ 
+insert into Roominfo values(004,'Triplex',3,0,'vacant',1); 
+insert into Roominfo values(005,'Common',8,0,'vacant',1); 
+ 
+insert into Roomcharge values('Single',10000); 
+insert into Roomcharge values('Duplex',5000); 
+insert into Roomcharge values('Triplex',1000); 
+insert into Roomcharge values('Common',500); 
+ 
+insert into Medicalcharge (bill_id, doc_charge, lab_charge, staff_charge, med_charge, room_charge, b_datetime) values(1,2000,450,100,1000,5000,'07-12-2012 14:00:00'); 
+insert into Medicalcharge (bill_id, doc_charge, lab_charge, staff_charge, med_charge, room_charge, b_datetime) values(2,1000,450,80,1000,5000,'07-08-2013 14:00:000'); 
+insert into Medicalcharge (bill_id, doc_charge, lab_charge, staff_charge, med_charge, room_charge, b_datetime) values(3,2000,300,100,1000,5000,'02-13-2014 14:00:00'); 
+insert into Medicalcharge (bill_id, doc_charge, lab_charge, staff_charge, med_charge, operation_charge, room_charge, b_datetime) values(4,5000,650,100,2000, 50000,10000,'0512-2016 14:00:00'); 
+insert into Medicalcharge (bill_id, doc_charge, lab_charge, staff_charge, med_charge, operation_charge, room_charge, b_datetime) values(5,4000,650,100,2000,100000, 5000,'0408-2016 18:00:00'); 
+insert into Medicalcharge (bill_id, doc_charge, lab_charge, staff_charge, med_charge, room_charge, b_datetime) values(6,1000,450,80,1000,5000,'05-10-2016 15:00:00'); 
+ 
+ 
+insert into Bill_Pat values(1,10001); 
+insert into Bill_Pat values(2,10002); 
+insert into Bill_Pat values(3,10003); 
+insert into Bill_Pat values(4,10004); 
+insert into Bill_Pat values(5,10005); 
+insert into Bill_Pat values(6,10006); 
+
+ 
+ 
+insert into Schedinfo values(001,10001,102,'06-12-2012 15:00:00','06-11-2012 14:00:00'); 
+insert into Schedinfo values(002,10002,101,'06-08-2013 16:00:00','06-07-2013 15:00:00'); 
+insert into Schedinfo values(003,10003,102,'02-10-2014 19:00:00','02-08-2014 18:00:00'); 
+insert into Schedinfo values(004,10004,105,'05-12-2015 11:00:000','05-11-2015 10:00:00'); 
+insert into Schedinfo values(005,10006,101,'05-10-2016 13:00:00','05-09-2016 11:00:00'); 
+insert into Schedinfo values(006,10007,101,'05-21-2016 13:00:00','05-20-2016 11:00:00'); 
